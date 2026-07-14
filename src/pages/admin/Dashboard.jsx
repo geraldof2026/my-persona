@@ -51,7 +51,7 @@ export default function Dashboard() {
     }
   }
 
-  return (
+  
 
     if (selectedClient) {
   return (
