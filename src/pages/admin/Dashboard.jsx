@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getClientsByTrainer, addClient } from "../../services/firestore";
+import WorkoutBuilder from "./WorkoutBuilder";
 
 export default function Dashboard() {
   const { currentUser, logout } = useAuth();
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newClientEmail, setNewClientEmail] = useState("");
+  const [selectedClient, setSelectedClient] = useState(null);
 
   // Carrega os alunos do Firestore ao entrar na página
   async function loadClients() {
@@ -49,7 +51,17 @@ export default function Dashboard() {
     }
   }
 
+ 
+
+    if (selectedClient) {
   return (
+    <WorkoutBuilder 
+      client={selectedClient} 
+      onBack={() => setSelectedClient(null)} 
+    />
+  );
+}
+
     <div className="min-h-screen bg-slate-950 text-slate-100 flex">
       
       {/* SIDEBAR */}
@@ -138,8 +150,11 @@ export default function Dashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-all">
-                          Montar Treino
+                        <button 
+                          onClick={() => setSelectedClient(client)}
+                          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-all"
+                        >
+                                     Montar Treino
                         </button>
                       </td>
                     </tr>

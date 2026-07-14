@@ -77,3 +77,19 @@ export async function addClient(trainerId, clientData) {
     throw error;
   }
 }
+// Função para criar um novo treino para um aluno específico
+export async function createWorkoutForClient(clientId, workoutData) {
+  try {
+    // Aponta para a subcoleção "workouts" dentro do documento do aluno
+    const workoutsRef = collection(db, "users", clientId, "workouts");
+    const docRef = await addDoc(workoutsRef, {
+      ...workoutData,
+      completed: false,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Erro ao criar treino:", error);
+    throw error;
+  }
+}
