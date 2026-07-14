@@ -7,44 +7,52 @@ import {
   signInWithPopup
 } from "firebase/auth";
 import { auth, googleProvider } from "../config/firebase";
+import { getUserProfile } from "../services/firestore";
 
-// Criação do Contexto
 const AuthContext = createContext();
 
-// Hook personalizado para usar o Contexto de forma mais limpa
 export function useAuth() {
   return useContext(AuthContext);
 }
 
-// Provedor que vai envolver a nossa aplicação
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null); // Guarda os dados do Firestore (incluindo o role)
   const [loading, setLoading] = useState(true);
 
-  // Criar conta com E-mail e Palavra-passe
   function signup(email, password) {
     return createUserWithEmailAndPassword(auth, email, password);
   }
 
-  // Iniciar sessão com E-mail e Palavra-passe
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
-  // Iniciar sessão com o Google (Custo Zero e 1 clique)
   function loginWithGoogle() {
     return signInWithPopup(auth, googleProvider);
   }
 
-  // Terminar sessão
   function logout() {
+    setUserProfile(null);
     return signOut(auth);
   }
 
-  // Monitoriza o estado do utilizador (se está logado ou não)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      
+      if (user) {
+        // Se o utilizador estiver logado, vai buscar o perfil dele no Firestore
+        try {
+          const profile = await getUserProfile(user.uid);
+          setUserProfile(profile);
+        } catch (err) {
+          console.error("Erro ao carregar perfil no estado global:", err);
+        }
+      } else {
+        setUserProfile(null);
+      }
+      
       setLoading(false);
     });
 
@@ -53,6 +61,8 @@ export function AuthProvider({ children }) {
 
   const value = {
     currentUser,
+    userProfile,
+    setUserProfile, // Permitirá atualizar o estado assim que ele fizer o onboarding
     login,
     signup,
     loginWithGoogle,
