@@ -4,73 +4,114 @@ import { createUserProfile } from "../../services/firestore";
 
 export default function Onboarding() {
   const { currentUser, setUserProfile } = useAuth();
+  const [selectedRole, setSelectedRole] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSelectRole(role) {
-    setLoading(false);
+  async function handleCompleteSetup(e) {
+    e.preventDefault();
+    if (!selectedRole) return;
+
     try {
       setLoading(true);
+      
+      // Monta os dados que vamos salvar no banco
       const profileData = {
-        name: currentUser.displayName || "",
+        role: selectedRole,
         email: currentUser.email,
-        role: role, // 'trainer' ou 'client'
-        photoURL: currentUser.photoURL || ""
+        name: currentUser.displayName || "",
+        createdAt: new Date().toISOString()
       };
 
-      // Grava no Firestore
+      // 1. Salva no Firebase de verdade!
       await createUserProfile(currentUser.uid, profileData);
-      
-      // Atualiza o estado global para a aplicação reagir imediatamente
+
+      // 2. Atualiza o sistema local para ele te jogar direto pro Dashboard
       setUserProfile(profileData);
+      
     } catch (error) {
-      alert("Erro ao salvar a tua escolha. Tenta novamente.");
-      console.error(error);
+      console.error("Erro ao configurar conta:", error);
+      alert("Erro ao salvar o perfil. Tente novamente.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl text-center">
-        <h1 className="text-4xl font-extrabold text-white mb-3 tracking-tight">
-          Bem-vindo ao <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-500">My Persona</span>
-        </h1>
-        <p className="text-slate-400 text-lg mb-10">
-          Para começarmos, diz-nos quem és na plataforma:
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Card Personal Trainer */}
-          <button
-            onClick={() => handleSelectRole("trainer")}
-            disabled={loading}
-            className="flex flex-col items-center justify-center p-8 bg-slate-900 border border-slate-800 rounded-2xl hover:border-orange-500/50 hover:bg-slate-900/80 active:scale-[0.98] transition-all text-left group"
-          >
-            <div className="w-16 h-16 bg-orange-500/10 text-orange-400 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-              💪
-            </div>
-            <h3 className="text-xl font-bold text-slate-100 mb-2">Sou Personal Trainer</h3>
-            <p className="text-slate-400 text-sm text-center">
-              Quero gerir os meus alunos, montar treinos personalizados de forma rápida e acompanhar a evolução de cargas.
-            </p>
-          </button>
-
-          {/* Card Aluno */}
-          <button
-            onClick={() => handleSelectRole("client")}
-            disabled={loading}
-            className="flex flex-col items-center justify-center p-8 bg-slate-900 border border-slate-800 rounded-2xl hover:border-amber-500/50 hover:bg-slate-900/80 active:scale-[0.98] transition-all text-left group"
-          >
-            <div className="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-              🏋️‍♂️
-            </div>
-            <h3 className="text-xl font-bold text-slate-100 mb-2">Sou Aluno</h3>
-            <p className="text-slate-400 text-sm text-center">
-              Quero visualizar e registar os meus treinos diários, controlar as minhas cargas e receber o feedback do meu treinador.
-            </p>
-          </button>
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 font-sans text-white">
+      <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+        
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-white mb-2">Bem-vindo ao MyPersona!</h1>
+          <p className="text-slate-400">
+            Falta muito pouco. Como você deseja utilizar a plataforma?
+          </p>
         </div>
+
+        <form onSubmit={handleCompleteSetup} className="space-y-8">
+          
+          {/* ÁREA DOS CARTÕES DE SELEÇÃO */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Opção: Personal Trainer */}
+            <label 
+              className={`cursor-pointer relative flex flex-col p-6 border-2 rounded-2xl transition-all ${
+                selectedRole === "trainer" 
+                  ? "border-orange-500 bg-orange-500/10 shadow-[0_0_15px_rgba(249,115,22,0.2)]" 
+                  : "border-slate-800 bg-slate-950 hover:border-slate-700"
+              }`}
+            >
+              <input 
+                type="radio" 
+                name="role" 
+                value="trainer" 
+                className="sr-only"
+                onChange={(e) => setSelectedRole(e.target.value)}
+              />
+              <div className="mb-4 text-orange-500">
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Sou Personal Trainer</h3>
+              <p className="text-slate-400 text-sm">Quero criar treinos, gerenciar meus alunos e acompanhar resultados.</p>
+            </label>
+
+            {/* Opção: Aluno */}
+            <label 
+              className={`cursor-pointer relative flex flex-col p-6 border-2 rounded-2xl transition-all ${
+                selectedRole === "student" 
+                  ? "border-orange-500 bg-orange-500/10 shadow-[0_0_15px_rgba(249,115,22,0.2)]" 
+                  : "border-slate-800 bg-slate-950 hover:border-slate-700"
+              }`}
+            >
+              <input 
+                type="radio" 
+                name="role" 
+                value="student" 
+                className="sr-only"
+                onChange={(e) => setSelectedRole(e.target.value)}
+              />
+              <div className="mb-4 text-orange-500">
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Sou Aluno</h3>
+              <p className="text-slate-400 text-sm">Quero acessar meus treinos, visualizar minha evolução e falar com meu Personal.</p>
+            </label>
+
+          </div>
+
+          {/* BOTÃO DE CONFIRMAÇÃO */}
+          <button 
+            type="submit"
+            disabled={!selectedRole || loading}
+            className={`w-full py-4 font-bold rounded-xl transition-all ${
+              selectedRole 
+                ? "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20" 
+                : "bg-slate-800 text-slate-500 cursor-not-allowed"
+            }`}
+          >
+            {loading ? "A preparar o ambiente..." : "Concluir Configuração"}
+          </button>
+
+        </form>
       </div>
     </div>
   );
