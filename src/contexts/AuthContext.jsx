@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  signInWithPopup
+  signInWithRedirect // <-- Alterado de Popup para Redirect
 } from "firebase/auth";
 import { auth, googleProvider } from "../config/firebase";
 import { getUserProfile } from "../services/firestore";
@@ -17,7 +17,7 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null); // Guarda os dados do Firestore (incluindo o role)
+  const [userProfile, setUserProfile] = useState(null); 
   const [loading, setLoading] = useState(true);
 
   function signup(email, password) {
@@ -28,8 +28,9 @@ export function AuthProvider({ children }) {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
+  // A função agora redireciona a página em vez de tentar abrir uma janela bloqueada
   function loginWithGoogle() {
-    return signInWithPopup(auth, googleProvider);
+    return signInWithRedirect(auth, googleProvider); 
   }
 
   function logout() {
@@ -42,7 +43,6 @@ export function AuthProvider({ children }) {
       setCurrentUser(user);
       
       if (user) {
-        // Se o utilizador estiver logado, vai buscar o perfil dele no Firestore
         try {
           const profile = await getUserProfile(user.uid);
           setUserProfile(profile);
@@ -62,7 +62,7 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     userProfile,
-    setUserProfile, // Permitirá atualizar o estado assim que ele fizer o onboarding
+    setUserProfile, 
     login,
     signup,
     loginWithGoogle,
