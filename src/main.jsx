@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css' // 👈 ESTA LINHA É CRUCIAL!
+import App from './App'
+import './index.css' // <-- ESTA É A LINHA MÁGICA QUE PUXA AS CORES
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
