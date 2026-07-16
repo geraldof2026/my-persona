@@ -1,39 +1,61 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "./contexts/AuthContext";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 
-// Importações das páginas
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import Onboarding from "./pages/auth/Onboarding";
-import Dashboard from "./pages/admin/Dashboard";
-import StudentDashboard from "./pages/student/StudentDashboard";
+// Importando as Páginas
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import Onboarding from './pages/auth/Onboarding';
+import Dashboard from './pages/admin/Dashboard';
+import StudentDashboard from './pages/student/StudentDashboard';
+import LandingPage from './pages/public/LandingPage'; // <-- A NOVA PÁGINA AQUI!
+
+// Componente para Proteger as Rotas (Redireciona para o login se não estiver autenticado)
+function PrivateRoute({ children }) {
+  const { currentUser, loading } = useAuth();
+  
+  if (loading) return <div className="h-screen bg-slate-950 text-white flex items-center justify-center">Carregando...</div>;
+  if (!currentUser) return <Navigate to="/login" />;
+  
+  return children;
+}
 
 export default function App() {
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, loading } = useAuth();
 
-  // Função para proteger rotas e redirecionar conforme o cargo
-  function ProtectedRoute({ children }) {
-    if (!currentUser) return <Navigate to="/login" />;
-    if (!userProfile) return <Onboarding />; // Força o onboarding se o perfil não existir
-    return children;
+  if (loading) {
+    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Carregando sistema...</div>;
   }
 
   return (
     <Router>
       <Routes>
-        {/* Rotas Públicas */}
-        <Route path="/login" element={!currentUser ? <Login /> : <Navigate to="/" />} />
-        <Route path="/register" element={!currentUser ? <Register /> : <Navigate to="/" />} />
-
-        {/* Rota Raiz: Redireciona dependendo do perfil */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            {userProfile?.role === "trainer" ? <Dashboard /> : <StudentDashboard />}
-          </ProtectedRoute>
+        {/* ROTAS PÚBLICAS */}
+        {/* A Rota Principal agora é a Landing Page, não mais o Login */}
+        <Route path="/" element={<LandingPage />} />
+        
+        <Route path="/login" element={currentUser ? <Navigate to="/dashboard" /> : <Login />} />
+        <Route path="/register" element={currentUser ? <Navigate to="/dashboard" /> : <Register />} />
+        
+        {/* ROTAS PRIVADAS (Requer Login) */}
+        <Route path="/onboarding" element={
+          <PrivateRoute>
+             {userProfile?.role ? <Navigate to="/dashboard" /> : <Onboarding />}
+          </PrivateRoute>
+        } />
+        
+        <Route path="/dashboard" element={
+          <PrivateRoute>
+            {!userProfile ? (
+               <Navigate to="/onboarding" />
+            ) : userProfile.role === 'personal' ? (
+               <Dashboard />
+            ) : (
+               <StudentDashboard />
+            )}
+          </PrivateRoute>
         } />
 
-        {/* Fallback */}
+        {/* Captura qualquer rota inválida e manda para a Home */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
