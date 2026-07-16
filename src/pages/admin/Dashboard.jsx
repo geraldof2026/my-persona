@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { addStudent, getStudentsByPersonal, deleteStudent, addWorkout, getWorkoutsByPersonal } from "../../services/firestore";
+import ProfileSettings from "../../components/ProfileSettings";
 
 export default function Dashboard() {
   const { currentUser, userProfile, logout } = useAuth();
@@ -99,25 +100,20 @@ export default function Dashboard() {
 
     try {
       setSalvandoTreino(true);
-      
       const alunoObj = alunos.find(a => a.id === alunoSelecionado);
-
       const dadosDoTreino = {
         nomeTreino: treinoNome,
         alunoId: alunoSelecionado,
         alunoNome: alunoObj ? alunoObj.nome : "Aluno Desconhecido",
-        exercicios: exercicios.filter(ex => ex.nome !== "") // Filtra campos vazios
+        exercicios: exercicios.filter(ex => ex.nome !== "")
       };
 
       const treinoSalvo = await addWorkout(currentUser.uid, dadosDoTreino);
       setTreinos([treinoSalvo, ...treinos]);
 
-      // Reset
-      setTreinoNome("");
-      setAlunoSelecionado("");
+      setTreinoNome(""); setAlunoSelecionado("");
       setExercicios([{ nome: "", series: "4", reps: "12", carga: "" }]);
       setIsTreinoModalOpen(false);
-
     } catch (error) {
       console.error("Erro ao guardar treino:", error);
     } finally {
@@ -181,26 +177,44 @@ export default function Dashboard() {
             <header className="mb-8 flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold">Visão Geral</h1>
-                <p className="text-slate-400 mt-1">Bem-vindo, <span className="text-orange-500 font-semibold">{userProfile?.name || "Personal"}</span>!</p>
+                <p className="text-slate-400 mt-1">Bem-vindo, <span className="text-orange-500 font-semibold">{currentUser?.displayName || userProfile?.name || "Personal"}</span>!</p>
               </div>
-              <button onClick={() => setIsAlunoModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-xl font-semibold">
+              <button onClick={() => setIsAlunoModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
                 + Novo Aluno
               </button>
             </header>
 
             {/* Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+              <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 p-6 rounded-3xl shadow-xl">
                 <h3 className="text-slate-400 text-sm">Alunos Ativos</h3>
                 <p className="text-3xl font-bold mt-2">{loadingAlunos ? "..." : alunos.length}</p>
               </div>
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+              <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 p-6 rounded-3xl shadow-xl">
                 <h3 className="text-slate-400 text-sm">Treinos Ativos</h3>
                 <p className="text-3xl font-bold mt-2">{loadingTreinos ? "..." : treinos.length}</p>
               </div>
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-2xl">
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-3xl shadow-xl shadow-orange-500/10">
                 <h3 className="text-orange-100 text-sm">Faturamento</h3>
                 <p className="text-3xl font-bold mt-2">R$ {alunos.length * 150}</p>
+              </div>
+            </div>
+
+            {/* SECÇÃO: PERFIL E ATALHOS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* O componente de perfil que criamos */}
+              <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 p-6 rounded-3xl shadow-xl">
+                <ProfileSettings />
+              </div>
+              
+              {/* Dicas Rápidas */}
+              <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 p-6 rounded-3xl shadow-xl">
+                <h3 className="text-lg font-bold mb-4 text-white">Dicas Rápidas</h3>
+                <ul className="space-y-3 text-slate-400 text-sm">
+                  <li className="flex gap-2">💡 Mantenha os planos dos alunos atualizados.</li>
+                  <li className="flex gap-2">💡 Crie nomes intuitivos para os treinos (Ex: Foco Glúteos).</li>
+                  <li className="flex gap-2">🔗 O seu site oficial: <a href="https://my-persona-2026.web.app" target="_blank" rel="noreferrer" className="text-orange-500 hover:underline">my-persona-2026.web.app</a></li>
+                </ul>
               </div>
             </div>
           </div>
@@ -211,39 +225,41 @@ export default function Dashboard() {
           <div>
             <header className="mb-8 flex justify-between items-center">
               <h1 className="text-3xl font-bold">Gestão de Alunos</h1>
-              <button onClick={() => setIsAlunoModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-xl font-semibold">
+              <button onClick={() => setIsAlunoModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
                 + Adicionar Aluno
               </button>
             </header>
 
-            <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <section className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-3xl p-6 shadow-xl">
               {loadingAlunos ? (
                 <div className="text-center py-8">A carregar alunos...</div>
               ) : alunos.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">Nenhum aluno registado.</div>
               ) : (
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 text-sm">
-                      <th className="py-3 px-4">Nome</th>
-                      <th className="py-3 px-4">E-mail</th>
-                      <th className="py-3 px-4">Plano</th>
-                      <th className="py-3 px-4 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {alunos.map(aluno => (
-                      <tr key={aluno.id} className="border-b border-slate-800/30 text-slate-300">
-                        <td className="py-4 px-4 font-semibold text-white">{aluno.nome}</td>
-                        <td className="py-4 px-4">{aluno.email}</td>
-                        <td className="py-4 px-4">{aluno.plano}</td>
-                        <td className="py-4 px-4 text-right">
-                          <button onClick={() => handleDeleteStudent(aluno.id)} className="text-red-500 hover:bg-red-500/10 p-2 rounded-lg">Eliminar</button>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 text-sm">
+                        <th className="py-3 px-4">Nome</th>
+                        <th className="py-3 px-4">E-mail</th>
+                        <th className="py-3 px-4">Plano</th>
+                        <th className="py-3 px-4 text-right">Ações</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {alunos.map(aluno => (
+                        <tr key={aluno.id} className="border-b border-slate-800/30 text-slate-300 hover:bg-slate-800/20 transition-colors">
+                          <td className="py-4 px-4 font-semibold text-white">{aluno.nome}</td>
+                          <td className="py-4 px-4">{aluno.email}</td>
+                          <td className="py-4 px-4">{aluno.plano}</td>
+                          <td className="py-4 px-4 text-right">
+                            <button onClick={() => handleDeleteStudent(aluno.id)} className="text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors">Eliminar</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </section>
           </div>
@@ -257,7 +273,7 @@ export default function Dashboard() {
               <button 
                 onClick={() => setIsTreinoModalOpen(true)} 
                 disabled={alunos.length === 0}
-                className="bg-orange-500 hover:bg-orange-600 disabled:bg-slate-800 disabled:text-slate-500 text-white px-5 py-3 rounded-xl font-semibold transition-all"
+                className="bg-orange-500 hover:bg-orange-600 disabled:bg-slate-800 disabled:text-slate-500 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
               >
                 + Criar Treino
               </button>
@@ -273,12 +289,12 @@ export default function Dashboard() {
               {loadingTreinos ? (
                 <div className="col-span-2 text-center py-8">A carregar treinos da nuvem...</div>
               ) : treinos.length === 0 ? (
-                <div className="col-span-2 text-center py-12 border-2 border-dashed border-slate-800 rounded-2xl text-slate-500">
+                <div className="col-span-2 text-center py-12 border-2 border-dashed border-slate-800 rounded-3xl text-slate-500">
                   Nenhum treino criado ainda. Clique em "Criar Treino" para começar!
                 </div>
               ) : (
                 treinos.map(treino => (
-                  <div key={treino.id} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-md">
+                  <div key={treino.id} className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 p-6 rounded-3xl shadow-xl hover:border-orange-500/30 transition-colors">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-xl font-bold text-white">{treino.nomeTreino}</h3>
@@ -286,9 +302,9 @@ export default function Dashboard() {
                       </div>
                       <span className="text-xs text-slate-500">{new Date(treino.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <div className="space-y-2 border-t border-slate-800 pt-4">
+                    <div className="space-y-2 border-t border-slate-800/50 pt-4">
                       {treino.exercicios.map((ex, i) => (
-                        <div key={i} className="flex justify-between text-sm text-slate-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800/50">
+                        <div key={i} className="flex justify-between text-sm text-slate-300 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/50">
                           <span className="font-medium text-white">{ex.nome}</span>
                           <span className="text-slate-400">{ex.series}x{ex.reps} — <span className="text-orange-400">{ex.carga || "0"}kg</span></span>
                         </div>
@@ -306,28 +322,28 @@ export default function Dashboard() {
       {/* ==================== MODAL: NOVO ALUNO ==================== */}
       {isAlunoModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
             <h2 className="text-2xl font-bold mb-6">Registar Novo Aluno</h2>
             <form onSubmit={handleAddStudent} className="space-y-4">
               <div>
                 <label className="block text-slate-400 text-sm font-medium mb-1">Nome Completo</label>
-                <input type="text" required value={novoNome} onChange={(e) => setNovoNome(e.target.value)} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none" />
+                <input type="text" required value={novoNome} onChange={(e) => setNovoNome(e.target.value)} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-orange-500" />
               </div>
               <div>
                 <label className="block text-slate-400 text-sm font-medium mb-1">E-mail</label>
-                <input type="email" required value={novoEmail} onChange={(e) => setNovoEmail(e.target.value)} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none" />
+                <input type="email" required value={novoEmail} onChange={(e) => setNovoEmail(e.target.value)} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-orange-500" />
               </div>
               <div>
                 <label className="block text-slate-400 text-sm font-medium mb-1">Plano</label>
-                <select value={novoPlano} onChange={(e) => setNovoPlano(e.target.value)} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none">
+                <select value={novoPlano} onChange={(e) => setNovoPlano(e.target.value)} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-orange-500">
                   <option value="Mensal">Mensal</option>
                   <option value="Semestral">Semestral</option>
                   <option value="Anual">Anual</option>
                 </select>
               </div>
               <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => setIsAlunoModalOpen(false)} className="flex-1 py-3 bg-slate-800 text-white rounded-xl">Cancelar</button>
-                <button type="submit" disabled={salvandoAluno} className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold">{salvandoAluno ? "A guardar..." : "Salvar"}</button>
+                <button type="button" onClick={() => setIsAlunoModalOpen(false)} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 transition-colors text-white rounded-xl">Cancelar</button>
+                <button type="submit" disabled={salvandoAluno} className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 transition-colors text-white rounded-xl font-bold">{salvandoAluno ? "A guardar..." : "Salvar"}</button>
               </div>
             </form>
           </div>
@@ -337,7 +353,7 @@ export default function Dashboard() {
       {/* ==================== MODAL: CRIAR TREINO ==================== */}
       {isTreinoModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4 overflow-y-auto">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 my-8 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 my-8 max-h-[90vh] overflow-y-auto shadow-2xl">
             <h2 className="text-2xl font-bold mb-6">Criar Novo Treino</h2>
             
             <form onSubmit={handleAddWorkout} className="space-y-4">
@@ -347,7 +363,7 @@ export default function Dashboard() {
                   required
                   value={alunoSelecionado} 
                   onChange={(e) => setAlunoSelecionado(e.target.value)} 
-                  className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none"
+                  className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-orange-500"
                 >
                   <option value="">-- Escolha um aluno da lista --</option>
                   {alunos.map(a => (
@@ -364,7 +380,7 @@ export default function Dashboard() {
                   placeholder="Ex: Treino A - Peito e Tríceps" 
                   value={treinoNome} 
                   onChange={(e) => setTreinoNome(e.target.value)} 
-                  className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none" 
+                  className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-orange-500" 
                 />
               </div>
 
@@ -386,11 +402,11 @@ export default function Dashboard() {
                       <div className="col-span-6">
                         <input 
                           type="text" 
-                          placeholder="Nome do exercício" 
+                          placeholder="Nome" 
                           required
                           value={ex.nome} 
                           onChange={(e) => handleExercicioChange(index, "nome", e.target.value)} 
-                          className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-white outline-none"
+                          className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-white outline-none focus:border-orange-500"
                         />
                       </div>
                       <div className="col-span-2">
@@ -400,7 +416,7 @@ export default function Dashboard() {
                           required
                           value={ex.series} 
                           onChange={(e) => handleExercicioChange(index, "series", e.target.value)} 
-                          className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-white text-center outline-none"
+                          className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-white text-center outline-none focus:border-orange-500"
                         />
                       </div>
                       <div className="col-span-2">
@@ -410,16 +426,16 @@ export default function Dashboard() {
                           required
                           value={ex.reps} 
                           onChange={(e) => handleExercicioChange(index, "reps", e.target.value)} 
-                          className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-white text-center outline-none"
+                          className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-white text-center outline-none focus:border-orange-500"
                         />
                       </div>
                       <div className="col-span-2">
                         <input 
                           type="number" 
-                          placeholder="Carga (kg)" 
+                          placeholder="Kg" 
                           value={ex.carga} 
                           onChange={(e) => handleExercicioChange(index, "carga", e.target.value)} 
-                          className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-white text-center outline-none"
+                          className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-white text-center outline-none focus:border-orange-500"
                         />
                       </div>
                     </div>
@@ -428,8 +444,8 @@ export default function Dashboard() {
               </div>
 
               <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => setIsTreinoModalOpen(false)} className="flex-1 py-3 bg-slate-800 text-white rounded-xl">Cancelar</button>
-                <button type="submit" disabled={salvandoTreino} className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold">{salvandoTreino ? "A criar..." : "Guardar Treino"}</button>
+                <button type="button" onClick={() => setIsTreinoModalOpen(false)} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 transition-colors text-white rounded-xl">Cancelar</button>
+                <button type="submit" disabled={salvandoTreino} className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 transition-colors text-white rounded-xl font-bold">{salvandoTreino ? "A criar..." : "Guardar Treino"}</button>
               </div>
             </form>
           </div>
