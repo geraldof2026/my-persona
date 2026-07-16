@@ -7,7 +7,7 @@ import Register from './pages/auth/Register';
 import Onboarding from './pages/auth/Onboarding';
 import Dashboard from './pages/admin/Dashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
-import LandingPage from './pages/public/LandingPage'; // <-- A NOVA PÁGINA AQUI!
+import LandingPage from './pages/public/LandingPage'; 
 
 // Componente para Proteger as Rotas (Redireciona para o login se não estiver autenticado)
 function PrivateRoute({ children }) {
@@ -30,7 +30,6 @@ export default function App() {
     <Router>
       <Routes>
         {/* ROTAS PÚBLICAS */}
-        {/* A Rota Principal agora é a Landing Page, não mais o Login */}
         <Route path="/" element={<LandingPage />} />
         
         <Route path="/login" element={currentUser ? <Navigate to="/dashboard" /> : <Login />} />
@@ -47,7 +46,7 @@ export default function App() {
           <PrivateRoute>
             {!userProfile ? (
                <Navigate to="/onboarding" />
-            ) : userProfile.role === 'personal' ? (
+            ) : userProfile.role === 'trainer' ? ( // <-- CORRIGIDO AQUI! De 'personal' para 'trainer'
                <Dashboard />
             ) : (
                <StudentDashboard />
