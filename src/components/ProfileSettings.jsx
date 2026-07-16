@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { updateProfile } from "firebase/auth";
+import { toast } from "sonner"; // <-- Nova importação
 
 export default function ProfileSettings() {
   const { currentUser } = useAuth();
@@ -10,9 +11,14 @@ export default function ProfileSettings() {
   async function handleUpdate(e) {
     e.preventDefault();
     setLoading(true);
-    await updateProfile(currentUser, { displayName: name });
-    alert("Nome atualizado!");
-    setLoading(false);
+    try {
+      await updateProfile(currentUser, { displayName: name });
+      toast.success("Perfil atualizado com sucesso!"); // <-- Notificação premium
+    } catch (error) {
+      toast.error("Erro ao atualizar perfil.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

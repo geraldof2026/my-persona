@@ -1,12 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { AuthProvider } from './contexts/AuthContext'; // Importe o seu Provider
-import './index.css'; // O seu CSS do Tailwind
+import { AuthProvider } from './contexts/AuthContext';
+import { Toaster } from 'sonner';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AuthProvider> {/* <-- O AuthProvider tem que abraçar o App */}
+    <AuthProvider>
+      <Toaster theme="dark" position="top-right" richColors />
       <App />
     </AuthProvider>
   </React.StrictMode>
