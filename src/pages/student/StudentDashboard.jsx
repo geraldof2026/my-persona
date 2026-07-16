@@ -7,7 +7,7 @@ export default function StudentDashboard() {
   const { currentUser, logout } = useAuth();
   const [treinos, setTreinos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [treinosConcluidos, setTreinosConcluidos] = useState([]); // Guarda os treinos feitos no dia
+  const [treinosConcluidos, setTreinosConcluidos] = useState([]);
 
   useEffect(() => {
     async function carregarTreinos() {
@@ -35,12 +35,10 @@ export default function StudentDashboard() {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col md:flex-row font-sans text-white">
       
-      {/* CABEÇALHO MOBILE (SÓ APARECE NO CELULAR) */}
+      {/* CABEÇALHO MOBILE */}
       <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
         <h2 className="text-xl font-black text-orange-500">MY<span className="text-white">PERSONA</span></h2>
-        <button onClick={logout} className="text-slate-400 hover:text-white flex items-center gap-2 text-sm font-medium">
-          Sair
-        </button>
+        <button onClick={logout} className="text-slate-400 hover:text-white flex items-center gap-2 text-sm font-medium">Sair</button>
       </div>
 
       {/* SIDEBAR DESKTOP */}
@@ -54,9 +52,7 @@ export default function StudentDashboard() {
           </div>
         </nav>
         <div className="p-4 border-t border-slate-800">
-          <button onClick={logout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
-            Sair do Sistema
-          </button>
+          <button onClick={logout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">Sair do Sistema</button>
         </div>
       </aside>
 
@@ -89,11 +85,19 @@ export default function StudentDashboard() {
 
                   <h3 className="text-xl font-bold text-white mb-4 pr-16">{treino.nomeTreino}</h3>
                   
-                  <div className="space-y-2 mb-6">
+                  <div className="space-y-4 mb-6">
                     {treino.exercicios.map((ex, i) => (
-                      <div key={i} className="flex justify-between text-sm text-slate-300 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/50">
-                        <span className="font-medium text-white">{ex.nome}</span>
-                        <span className="text-slate-400">{ex.series}x{ex.reps} {ex.carga && `— ${ex.carga}kg`}</span>
+                      <div key={i} className="flex flex-col gap-2.5 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/50">
+                        <div className="flex justify-between text-sm text-slate-300">
+                          <span className="font-semibold text-white">{ex.nome}</span>
+                          <span className="text-slate-400 font-medium">{ex.series}x{ex.reps} {ex.carga && `— ${ex.carga}kg`}</span>
+                        </div>
+                        {/* SE O PERSONAL TIVER CARREGADO UMA IMAGEM, ELA É MOSTRADA AQUI */}
+                        {ex.fotoUrl && (
+                          <div className="relative rounded-xl overflow-hidden border border-slate-800/80 h-40">
+                            <img src={ex.fotoUrl} alt={ex.nome} className="w-full h-full object-cover" />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
