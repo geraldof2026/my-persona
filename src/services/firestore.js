@@ -1,6 +1,9 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../config/firebase"; // Certifique-se de que o db está exportado no seu arquivo firebase.js
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, doc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, doc, deleteDoc } from "firebase/firestore";
+// (Mantém os imports e as funções anteriores que já lá tens)
 
 // 1. Busca o perfil do utilizador (usado no AuthContext)
 export async function getUserProfile(uid) {
@@ -47,4 +50,37 @@ export async function getStudentsByPersonal(personalId) {
   });
   
   return students; // Retorna a lista completa para o Dashboard
+}
+// 5. Exclui um aluno do banco de dados
+export async function deleteStudent(studentId) {
+  const docRef = doc(db, "students", studentId);
+  await deleteDoc(docRef);
+}
+
+
+// 6. Guarda um novo treino associado a um aluno
+export async function addWorkout(personalId, workoutData) {
+  const workoutsRef = collection(db, "workouts");
+  const newWorkoutData = {
+    ...workoutData,
+    personalId: personalId,
+    createdAt: new Date().toISOString()
+  };
+  
+  const docRef = await addDoc(workoutsRef, newWorkoutData);
+  return { id: docRef.id, ...newWorkoutData };
+}
+
+// 7. Procura todos os treinos criados por este Personal Trainer
+export async function getWorkoutsByPersonal(personalId) {
+  const workoutsRef = collection(db, "workouts");
+  const q = query(workoutsRef, where("personalId", "==", personalId));
+  const querySnapshot = await getDocs(q);
+  
+  const workouts = [];
+  querySnapshot.forEach((doc) => {
+    workouts.push({ id: doc.id, ...doc.data() });
+  });
+  
+  return workouts;
 }
