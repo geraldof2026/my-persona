@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { addStudent, getStudentsByPersonal, deleteStudent, addWorkout, getWorkoutsByPersonal } from "../../services/firestore";
+import { uploadImageToImgBB } from "../../services/imgbb"; // <-- NOVA IMPORTAÇÃO
 import ProfileSettings from "../../components/ProfileSettings";
 import { toast } from "sonner";
 
@@ -27,7 +28,7 @@ export default function Dashboard() {
 
   const [treinoNome, setTreinoNome] = useState("");
   const [alunoSelecionado, setAlunoSelecionado] = useState("");
-  const [exercicios, setExercicios] = useState([{ nome: "", series: "4", reps: "12", carga: "" }]);
+  const [exercicios, setExercicios] = useState([{ nome: "", series: "4", reps: "12", carga: "", fotoUrl: "" }]); // <-- Adicionado fotoUrl
 
   useEffect(() => {
     async function carregarDados() {
@@ -85,13 +86,30 @@ export default function Dashboard() {
   }
 
   function handleAddExercicioField() {
-    setExercicios([...exercicios, { nome: "", series: "4", reps: "12", carga: "" }]);
+    setExercicios([...exercicios, { nome: "", series: "4", reps: "12", carga: "", fotoUrl: "" }]);
   }
 
   function handleExercicioChange(index, field, value) {
     const novosExercicios = [...exercicios];
     novosExercicios[index][field] = value;
     setExercicios(novosExercicios);
+  }
+
+  // Função para fazer o upload da imagem de um exercício específico
+  async function handleImageUpload(index, file) {
+    if (!file) return;
+    try {
+      toast.promise(uploadImageToImgBB(file), {
+        loading: "A carregar imagem do exercício...",
+        success: (url) => {
+          handleExercicioChange(index, "fotoUrl", url);
+          return "Imagem salva com sucesso!";
+        },
+        error: "Erro ao carregar imagem para o servidor.",
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async function handleAddWorkout(e) {
@@ -115,7 +133,7 @@ export default function Dashboard() {
       setTreinos([treinoSalvo, ...treinos]);
 
       setTreinoNome(""); setAlunoSelecionado("");
-      setExercicios([{ nome: "", series: "4", reps: "12", carga: "" }]);
+      setExercicios([{ nome: "", series: "4", reps: "12", carga: "", fotoUrl: "" }]);
       setIsTreinoModalOpen(false);
       toast.success("Treino guardado e enviado para o aluno!");
     } catch (error) {
@@ -134,12 +152,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col md:flex-row font-sans text-white">
       
-      {/* CABEÇALHO MOBILE (SÓ APARECE NO CELULAR) */}
+      {/* CABEÇALHO MOBILE */}
       <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
         <h2 className="text-xl font-black text-orange-500">MY<span className="text-white">PERSONA</span></h2>
-        <button onClick={logout} className="text-slate-400 hover:text-white flex items-center gap-2">
-          Sair do Sistema
-        </button>
+        <button onClick={logout} className="text-slate-400 hover:text-white flex items-center gap-2">Sair do Sistema</button>
       </div>
 
       {/* MENU DE ABAS MOBILE */}
@@ -164,7 +180,7 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* CONTEÚDO PRINCIPAL (Manteve-se igual) */}
+      {/* CONTEÚDO PRINCIPAL */}
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         
         {activeTab === "geral" && (
@@ -200,7 +216,7 @@ export default function Dashboard() {
                 <h3 className="text-lg font-bold mb-4 text-white">Dicas Rápidas</h3>
                 <ul className="space-y-3 text-slate-400 text-sm">
                   <li className="flex gap-2">💡 Mantenha os planos dos alunos atualizados.</li>
-                  <li className="flex gap-2">📱 O site agora pode ser instalado no celular!</li>
+                  <li className="flex gap-2">🖼️ Agora podes adicionar fotos/GIFs aos exercícios!</li>
                   <li className="flex gap-2">🔗 O seu site oficial: <a href="https://my-persona-2026.web.app" target="_blank" rel="noreferrer" className="text-orange-500 hover:underline">my-persona-2026.web.app</a></li>
                 </ul>
               </div>
@@ -275,11 +291,16 @@ export default function Dashboard() {
                         <p className="text-sm text-orange-500 font-semibold mt-1">Aluno: {treino.alunoNome}</p>
                       </div>
                     </div>
-                    <div className="space-y-2 border-t border-slate-800/50 pt-4">
+                    <div className="space-y-3 border-t border-slate-800/50 pt-4">
                       {treino.exercicios.map((ex, i) => (
-                        <div key={i} className="flex justify-between text-sm text-slate-300 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/50">
-                          <span className="font-medium text-white">{ex.nome}</span>
-                          <span className="text-slate-400">{ex.series}x{ex.reps} {ex.carga && `— ${ex.carga}kg`}</span>
+                        <div key={i} className="flex flex-col gap-2 bg-slate-950/50 p-3 rounded-xl border border-slate-800/50">
+                          <div className="flex justify-between text-sm text-slate-300">
+                            <span className="font-medium text-white">{ex.nome}</span>
+                            <span className="text-slate-400">{ex.series}x{ex.reps} {ex.carga && `— ${ex.carga}kg`}</span>
+                          </div>
+                          {ex.fotoUrl && (
+                            <img src={ex.fotoUrl} alt={ex.nome} className="w-full h-32 object-cover rounded-lg" />
+                          )}
                         </div>
                       ))}
                     </div>
@@ -329,11 +350,26 @@ export default function Dashboard() {
                 </div>
                 <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
                   {exercicios.map((ex, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                      <div className="col-span-12 md:col-span-6"><input type="text" placeholder="Nome" required value={ex.nome} onChange={(e) => handleExercicioChange(index, "nome", e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm outline-none" /></div>
-                      <div className="col-span-4 md:col-span-2"><input type="number" placeholder="Séries" required value={ex.series} onChange={(e) => handleExercicioChange(index, "series", e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-center outline-none" /></div>
-                      <div className="col-span-4 md:col-span-2"><input type="text" placeholder="Reps" required value={ex.reps} onChange={(e) => handleExercicioChange(index, "reps", e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-center outline-none" /></div>
-                      <div className="col-span-4 md:col-span-2"><input type="number" placeholder="Kg" value={ex.carga} onChange={(e) => handleExercicioChange(index, "carga", e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-center outline-none" /></div>
+                    <div key={index} className="flex flex-col gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                      <div className="grid grid-cols-12 gap-2">
+                        <div className="col-span-12 md:col-span-6"><input type="text" placeholder="Nome" required value={ex.nome} onChange={(e) => handleExercicioChange(index, "nome", e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm outline-none" /></div>
+                        <div className="col-span-4 md:col-span-2"><input type="number" placeholder="Séries" required value={ex.series} onChange={(e) => handleExercicioChange(index, "series", e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-center outline-none" /></div>
+                        <div className="col-span-4 md:col-span-2"><input type="text" placeholder="Reps" required value={ex.reps} onChange={(e) => handleExercicioChange(index, "reps", e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-center outline-none" /></div>
+                        <div className="col-span-4 md:col-span-2"><input type="number" placeholder="Kg" value={ex.carga} onChange={(e) => handleExercicioChange(index, "carga", e.target.value)} className="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg text-sm text-center outline-none" /></div>
+                      </div>
+                      {/* INPUT DE FAZER UPLOAD DA FOTO DO EXERCÍCIO */}
+                      <div className="flex items-center gap-3 border-t border-slate-800/30 pt-2 mt-1">
+                        <label className="text-xs text-slate-400 font-medium">Foto / GIF demonstrativo:</label>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => handleImageUpload(index, e.target.files[0])} 
+                          className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-500/10 file:text-orange-500 hover:file:bg-orange-500/20"
+                        />
+                        {ex.fotoUrl && (
+                          <span className="text-xs text-green-500 font-bold">✓ Carregada</span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
