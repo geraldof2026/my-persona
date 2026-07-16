@@ -1,43 +1,41 @@
 import React from "react";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./contexts/AuthContext";
+
+// Importações das páginas
 import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 import Onboarding from "./pages/auth/Onboarding";
 import Dashboard from "./pages/admin/Dashboard";
+import StudentDashboard from "./pages/student/StudentDashboard";
 
-function NavigationController() {
-  const { currentUser, userProfile, logout } = useAuth();
+export default function App() {
+  const { currentUser, userProfile } = useAuth();
 
-  // 1. Se não estiver logado, vai para o Login
-  if (!currentUser) {
-    return <Login />;
+  // Função para proteger rotas e redirecionar conforme o cargo
+  function ProtectedRoute({ children }) {
+    if (!currentUser) return <Navigate to="/login" />;
+    if (!userProfile) return <Onboarding />; // Força o onboarding se o perfil não existir
+    return children;
   }
 
-  // 2. Se estiver logado, mas ainda não escolheu o papel, vai para o Onboarding
-  if (!userProfile) {
-    return <Onboarding />;
-  }
-
-  // 3. Se for Personal Trainer, carrega o Dashboard real
-  if (userProfile.role === "trainer") {
-    return <Dashboard />;
-  }
-
-  // 4. Se for Aluno
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold mb-4">Área do Aluno</h1>
-      <p className="text-slate-400 mb-6">Bons treinos, {userProfile.name || currentUser.email}!</p>
-      <button onClick={logout} className="px-6 py-2 bg-red-600 rounded-lg">Sair</button>
-    </div>
+    <Router>
+      <Routes>
+        {/* Rotas Públicas */}
+        <Route path="/login" element={!currentUser ? <Login /> : <Navigate to="/" />} />
+        <Route path="/register" element={!currentUser ? <Register /> : <Navigate to="/" />} />
+
+        {/* Rota Raiz: Redireciona dependendo do perfil */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            {userProfile?.role === "trainer" ? <Dashboard /> : <StudentDashboard />}
+          </ProtectedRoute>
+        } />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 }
-
-function App() {
-  return (
-    <AuthProvider>
-      <NavigationController />
-    </AuthProvider>
-  );
-}
-
-export default App;
