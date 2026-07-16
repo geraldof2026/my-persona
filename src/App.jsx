@@ -8,8 +8,8 @@ import Onboarding from './pages/auth/Onboarding';
 import Dashboard from './pages/admin/Dashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 import LandingPage from './pages/public/LandingPage'; 
+import PublicTrainerProfile from './pages/public/PublicTrainerProfile'; // <-- NOVA IMPORTAÇÃO
 
-// Componente para Proteger as Rotas (Redireciona para o login se não estiver autenticado)
 function PrivateRoute({ children }) {
   const { currentUser, loading } = useAuth();
   
@@ -29,13 +29,14 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* ROTAS PÚBLICAS */}
         <Route path="/" element={<LandingPage />} />
+        
+        {/* ROTA DA VITRINE DO PERSONAL (O CLONE DO SUPERPROF) */}
+        <Route path="/p/:id" element={<PublicTrainerProfile />} />
         
         <Route path="/login" element={currentUser ? <Navigate to="/dashboard" /> : <Login />} />
         <Route path="/register" element={currentUser ? <Navigate to="/dashboard" /> : <Register />} />
         
-        {/* ROTAS PRIVADAS (Requer Login) */}
         <Route path="/onboarding" element={
           <PrivateRoute>
              {userProfile?.role ? <Navigate to="/dashboard" /> : <Onboarding />}
@@ -46,7 +47,7 @@ export default function App() {
           <PrivateRoute>
             {!userProfile ? (
                <Navigate to="/onboarding" />
-            ) : userProfile.role === 'trainer' ? ( // <-- CORRIGIDO AQUI! De 'personal' para 'trainer'
+            ) : userProfile.role === 'trainer' ? (
                <Dashboard />
             ) : (
                <StudentDashboard />
@@ -54,7 +55,6 @@ export default function App() {
           </PrivateRoute>
         } />
 
-        {/* Captura qualquer rota inválida e manda para a Home */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
