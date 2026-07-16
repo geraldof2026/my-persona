@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  signInWithRedirect // <-- Alterado de Popup para Redirect
+  signInWithPopup // <-- Voltamos para o Popup aqui
 } from "firebase/auth";
 import { auth, googleProvider } from "../config/firebase";
 import { getUserProfile } from "../services/firestore";
@@ -28,9 +28,9 @@ export function AuthProvider({ children }) {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
-  // A função agora redireciona a página em vez de tentar abrir uma janela bloqueada
+  // A função agora abre a janela flutuante normal
   function loginWithGoogle() {
-    return signInWithRedirect(auth, googleProvider); 
+    return signInWithPopup(auth, googleProvider); 
   }
 
   function logout() {
