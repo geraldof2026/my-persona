@@ -84,3 +84,27 @@ export async function getWorkoutsByPersonal(personalId) {
   
   return workouts;
 }
+// 8. Busca os treinos para o Painel do Aluno usando o e-mail dele
+export async function getStudentWorkoutsByEmail(email) {
+  // Primeiro, achamos o cadastro do aluno pelo e-mail
+  const studentsRef = collection(db, "students");
+  const qStudent = query(studentsRef, where("email", "==", email));
+  const studentSnap = await getDocs(qStudent);
+
+  if (studentSnap.empty) return []; // Se não achar, retorna vazio
+
+  // Pega o ID que o Personal gerou para este aluno
+  const alunoId = studentSnap.docs[0].id;
+
+  // Agora busca os treinos vinculados a este ID
+  const workoutsRef = collection(db, "workouts");
+  const qWorkouts = query(workoutsRef, where("alunoId", "==", alunoId));
+  const workoutsSnap = await getDocs(qWorkouts);
+
+  const workouts = [];
+  workoutsSnap.forEach((doc) => {
+    workouts.push({ id: doc.id, ...doc.data() });
+  });
+
+  return workouts;
+}
